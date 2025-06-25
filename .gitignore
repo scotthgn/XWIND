@@ -1,0 +1,11 @@
+#various comile files
+libxwind.so
+lpack_xwind.*
+Makefile
+pkgIndex.tcl
+xwindFunctionMap*
+windconv.o
+windline.o
+
+#test direcoties
+_test_model

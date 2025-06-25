@@ -1,0 +1,4 @@
+cd src
+initpackage xwind lmod_xwind.dat .
+lmod xwind .
+cd ../
