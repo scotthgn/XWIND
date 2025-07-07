@@ -143,7 +143,7 @@ c      Setting physical constants
 
 c      Setting wind resolution
        dlog_r = 0.01
-       dcos_theta = 0.001
+       dcos_theta = 0.002
        dphi = 0.001
 
 c      Reading parameters
