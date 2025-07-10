@@ -43,16 +43,10 @@ c      Start by filling internal parameter array
        do i=1, npars, 1
           wnd_pars(i) = param(i)
        end do
+       wnd_pars(12) = 0.5*(ear(ne) + ear(0)) !E0 - arbitrary, set to centre of E range
 
-       wnd_pars(12) = 1.0 !abundance, does not matter, set to solar
-       wnd_pars(13) = 0.5*(ear(ne) + ear(0))
-       wnd_pars(14) = 1 !Incident spectrum norm, arbitrary since renorm later
-       wnd_pars(15) = 2 !Incident specturm photon index, arbitrary
-
-       !call ConvolutionInLnSpace(ear,w,0,ifl,"",photar,photer)
        call windline(ear,ne,wnd_pars,ifl,photar_wnd,photer)
-       !call convolve_line(ear,ne,photar,ear/wnd_pars(13), photar_wnd)
-       call logconv_line(ear,ne,photar,ear/wnd_pars(13),photar_wnd)
+       call logconv_line(ear,ne,photar,ear/wnd_pars(12),photar_wnd)
        
        return
        end
@@ -90,9 +84,6 @@ c      is set such that its sum is equal to 1
           ph_kern_tp(i) = ph_kern(i)
           ph(i) = 0.0
        end do
-
-       !re-normalsiing windline
-       call re_norm(ear,ne,ph_kern_tp)
 
        !checking if input energy grid is log 
        is_log = .true.
@@ -164,6 +155,7 @@ c      is set such that its sum is equal to 1
           end do
        end do
 
+       
        return
        end
 
@@ -192,82 +184,7 @@ c      input energy grid is not equally spaced in either lin or log
        return
        end
        
-       subroutine convolve_line(ear, ne, ph, ee_kern, ph_kern)
-c      Does a direct convolution (i.e no ffts) between an input spectrum
-c      and the windline model. Since the line width changes with energy
-c      this routine will adapt the line width  and apply the correct
-c      normalisation for each energy bin in the input spectrum
-c
-c      The windline normalisation is always set s.t the integrated line
-c      profile is 1 (i.e conserving photon number)
-c
-c      ee_kern must be in units of E/E0. When updating line width, used
-c      uses centre of energy bin
-c
-c      The subroutine updates the array ph, giving the convolved array
-       implicit none
-
-       integer ne
-       real ear(0:ne), ee_kern(0:ne), ek_temp(0:ne)
-       real ph(ne), ph_in(ne), ph_kern(ne), ph_kern_tp(ne)
-       real emid, ear_max, ear_min
-       integer idx
-       
-       integer i, j, counter
-
-       !First copying input arrays, zeroing outut, and flipping kernel
-       do i=1, ne, 1
-          ph_in(i) = ph(i)
-          !ph_kern_tp(i) = ph_kern(ne-i+1)
-          ph_kern_tp(i) = ph_kern(i)
-          ph(i) = 0.0
-       end do
-
-       call re_norm(ear,ne,ph_kern_tp)
 
        
-       ear_max = ear(ne)
-       ear_min = ear(0)
-       !Looping through each input energy
-       do i=1, ne, 1 
-          !generating temporary kernel energy grid
-          ek_temp = ee_kern*0.5*(ear(i) + ear(i-1))
-
-          !looping through second e grid and applying convolution when overlap
-          counter = 1
-          do j=1, ne, 1
-             emid = 0.5*(ek_temp(j)+ek_temp(j-1))
-             if ((emid.lt.ear_max).and.(emid.gt.ear_min)) then                
-                ph(i) = ph(i) + ph_in(counter)*ph_kern_tp(j)
-                counter = counter + 1
-             else
-                continue
-             end if
-          end do
-          !write(*,*) ph(i)
-       end do
-
-       return
-       end
-       
-
-       subroutine re_norm(ear,ne,ph)
-c      Re-normalises such that the integrated line-profile is unity
-       implicit none
-
-       integer ne
-       real ear(0:ne), ph(ne)
-       double precision ph_int
-       
-       integer i
-
-       ph_int = 0.0
-       do i=1, ne, 1
-          ph_int = ph_int + ph(i)!+ (ear(i) - ear(i-1))*ph(i)
-       end do
-       ph = ph*(1.0/ph_int)
-       
-       return
-       end
 
 
