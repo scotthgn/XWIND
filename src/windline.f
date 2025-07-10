@@ -18,14 +18,88 @@ c      Note: internal resolution set to give 3eV at 6keV
 c      (oversample XRISM resolution)
 
 
+
        subroutine windline(ear,ne,param,ifl,photar,photer)
+c      Returns line profile centered on input energy E0
+c      Re-normalised to unity
        implicit none
 
-       integer npars
-       parameter(npars=15)
+       integer npars, cpars
+       parameter(npars=12)
+       parameter(cpars=15)
+       
+       integer ne, ifl
+       real ear(0:ne), photar(ne),param(npars),photer(ne),cparam(cpars)
+       real oldpars(npars)
+
+       integer Nnew
+       parameter(Nnew=8400)
+       real e_enew(0:Nnew), ph(Nnew), Enew(0:Nnew) !e_enew defined as Eobs_Eem
+
+       real fstart(ne), fend(ne)
+       real istart(ne), iend(ne)
+       
+       logical parchange, echange
+       save oldpars
+
+       integer i, n
+
+c      param(1):    Mbh, Black hole mass, Msol
+c      param(2):    mdot_w, wind mass outflow rate, Mdot/Mdot_edd 
+c      param(3):    r_in, Inner launch radius, Rg
+c      param(4):    r_out, Outer launch radius, Rg
+c      param(5):    d_foci, Distance to wind foci, Rg
+c      param(6):    fcov, Covering fraction of wind 
+c      param(7):    vinf, outflow velocity at infinty, c
+c      param(8):    rv, Wind velocity scale-length, Rg
+c      param(9):    vexp, Wind velocity exponent
+c      param(10):   kappa, Radial density law exponent
+c      param(11):   inc, Observer inclination, deg
+c      param(12):   E0, Rest frame line energy, keV
+
+c      Defining internal energy grid
+c      Linearly spaced in Eobs_Eem, to give 3eV at 6keV
+c      Implies delta Eobs_Eem = 5e-4
+c      Range of 0.2 -> 4.4 gives max bulk velocity 0.9c
+       e_enew(0) = 0.2
+       Enew(0) = e_enew(0) * param(12)
+       do n=1, Nnew, 1
+          e_enew(n) = e_enew(0) + 5e-4*float(n)
+          Enew(n) = e_enew(n) * param(12)
+       end do
+
+c      Filling parameter array for line-calculation
+       do i=1, npars-1, 1
+          cparam(i) = param(i)
+       end do
+       cparam(12) = 1.0 !Afe
+       cparam(13) = param(12) !E0
+       cparam(14) = 1.0 !incident spec norm
+       cparam(15) = 2.0 !incident spec gamma
+       
+c      calculating line
+       call calc_windline(e_enew,Nnew,cparam,ifl,ph)
+
+c      re-binning to xspec grid
+       call inibin(Nnew, Enew, ne, ear, istart, iend, fstart, fend, 0)
+       call erebin(Nnew, ph, ne, istart, iend, fstart, fend, photar)
+
+c      re-normalising
+       call re_norm(ear,ne,photar)
+
+       return
+       end
+       
+       
+       subroutine windlinefk(ear,ne,param,ifl,photar,photer)
+       implicit none
+
+       integer npars, cpars
+       parameter(npars=14)
+       parameter(cpars=15)
 
        integer ne, ifl
-       real ear(0:ne), photar(ne), param(npars), photer(ne)
+       real ear(0:ne),photar(ne),param(npars),photer(ne),cparam(cpars)
        real oldpars(npars)
 
        integer Nnew
@@ -52,10 +126,9 @@ c      param(9):    vexp, Wind velocity exponent
 c      param(10):   kappa, Radial density law exponent
 c      param(11):   inc, Observer inclination, deg
 c      param(12):   Afe, iron abundance, relative to solar
-c      param(13):   E0, Rest frame line energy, keV
-c      param(14):   N0, incident power-law normalisation at 1 keV
+c      param(13):   N0, incident power-law normalisation at 1 keV
 c                       has units: ph/s/cm^2/keV
-c      param(15):   Gamma, incident power-law photon index
+c      param(14):   Gamma, incident power-law photon index
 
 
 c      Defining internal energy grid
@@ -63,14 +136,22 @@ c      Linearly spaced in Eobs_Eem, to give 3eV at 6keV
 c      Implies delta Eobs_Eem = 5e-4
 c      Range of 0.2 -> 4.4 gives max bulk velocity 0.9c
        e_enew(0) = 0.2
-       Enew(0) = e_enew(0) * param(13)
+       Enew(0) = e_enew(0) * 6.4
        do n=1, Nnew, 1
           e_enew(n) = e_enew(0) + 5e-4*float(n)
-          Enew(n) = e_enew(n) * param(13)
+          Enew(n) = e_enew(n) * 6.4
        end do
 
+c      Filling param array
+       do i=1, 12, 1
+          cparam(i) = param(i)
+       end do
+       cparam(13) = 6.4 !central energy
+       cparam(14) = param(13)
+       cparam(15) = param(14)
+       
 c      calling model
-       call calc_windline(e_enew, Nnew, param, ifl, ph)
+       call calc_windline(e_enew, Nnew, cparam, ifl, ph)
 
 c      Re-binning to xspec grid
        call inibin(Nnew, Enew, ne, ear, istart, iend, fstart, fend, 0)
@@ -265,6 +346,13 @@ c      -----------------------------------------------------------------
        
        return
        end
+
+
+c-----------------------------------------------------------------------
+c-----------------------------------------------------------------------
+c      Helper routines
+c-----------------------------------------------------------------------
+c-----------------------------------------------------------------------
       
 
        subroutine do_tran(es,ne,ph_in,cross_sec,N_feK,pars)
@@ -300,6 +388,33 @@ c      pars(3): dR
        end
 
 
+       subroutine re_norm(ear,ne,ph)
+c      Re-normalises such that the integrated line-profile is unity
+       implicit none
+
+       integer ne
+       real ear(0:ne), ph(ne)
+       double precision ph_int
+       
+       integer i
+
+       ph_int = 0.0
+       do i=1, ne, 1
+          ph_int = ph_int + ph(i)
+       end do
+       ph = ph*(1.0/ph_int)
+       
+       return
+       end
+
+
+      
+c-----------------------------------------------------------------------
+c-----------------------------------------------------------------------
+c      Model functions
+c-----------------------------------------------------------------------
+c-----------------------------------------------------------------------
+      
 
        function energy_shift(inc, r, phi, vr, vz, vphi)
 c      Calculates the fractional energy shift of a photon between the 
