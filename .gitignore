@@ -1,11 +1,13 @@
 #various comile files
 libxwind.so
+libxwind.dylib
 lpack_xwind.*
 Makefile
 pkgIndex.tcl
 xwindFunctionMap*
-windconv.o
-windline.o
+*.o
+*.f~
+*.f#
 
 #test direcoties
 _test_model

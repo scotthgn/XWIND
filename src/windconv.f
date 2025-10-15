@@ -9,16 +9,17 @@ c      profile, required for calculating the emissivity
 
 
        subroutine windconv(ear,ne,param,ifl,photar,photer)
+       use xsfortran
        implicit none
        
        integer npars
-       parameter(npars=11)
+       parameter(npars=10)
 
        integer ne, ifl
        real ear(0:ne), photar(ne), param(npars), photer(ne)
        real oldpars(npars)
 
-       real photar_wnd(ne), wnd_pars(15) !w is wnd_pars. Short since fixed form
+       real photar_wnd(ne), wnd_pars(14) !w is wnd_pars. Short since fixed form
        real emid !midpoint in energy range - used for initial windline call
        
        logical parchange, echange
@@ -43,10 +44,10 @@ c      Start by filling internal parameter array
        do i=1, npars, 1
           wnd_pars(i) = param(i)
        end do
-       wnd_pars(12) = 0.5*(ear(ne) + ear(0)) !E0 - arbitrary, set to centre of E range
+       wnd_pars(11) = 0.5*(ear(ne) + ear(0)) !E0 - arbitrary, set to centre of E range
 
        call windline(ear,ne,wnd_pars,ifl,photar_wnd,photer)
-       call logconv_line(ear,ne,photar,ear/wnd_pars(12),photar_wnd)
+       call logconv_line(ear,ne,photar,ear/wnd_pars(11),photar_wnd)
        
        return
        end

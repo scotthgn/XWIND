@@ -18,22 +18,22 @@ c      Note: internal resolution set to give 3eV at 6keV
 c      (oversample XRISM resolution)
 
 
-
        subroutine windline(ear,ne,param,ifl,photar,photer)
+       use xsfortran
 c      Returns line profile centered on input energy E0
 c      Re-normalised to unity
        implicit none
 
        integer npars, cpars
-       parameter(npars=12)
-       parameter(cpars=15)
+       parameter(npars=11)
+       parameter(cpars=14)
        
        integer ne, ifl
        real ear(0:ne), photar(ne),param(npars),photer(ne),cparam(cpars)
        real oldpars(npars)
 
        integer Nnew
-       parameter(Nnew=8400)
+       parameter(Nnew=21000)
        real e_enew(0:Nnew), ph(Nnew), Enew(0:Nnew) !e_enew defined as Eobs_Eem
 
        real fstart(ne), fend(ne)
@@ -44,45 +44,47 @@ c      Re-normalised to unity
 
        integer i, n
 
-c      param(1):    Mbh, Black hole mass, Msol
-c      param(2):    mdot_w, wind mass outflow rate, Mdot/Mdot_edd 
-c      param(3):    r_in, Inner launch radius, Rg
-c      param(4):    r_out, Outer launch radius, Rg
-c      param(5):    d_foci, Distance to wind foci, Rg
-c      param(6):    fcov, Covering fraction of wind 
-c      param(7):    vinf, outflow velocity at infinty, c
-c      param(8):    rv, Wind velocity scale-length, Rg
-c      param(9):    vexp, Wind velocity exponent
-c      param(10):   kappa, Radial density law exponent
-c      param(11):   inc, Observer inclination, deg
-c      param(12):   E0, Rest frame line energy, keV
+c      param(1):    mdot_w, wind mass outflow rate, Mdot/Mdot_edd 
+c      param(2):    r_in, Inner launch radius, Rg
+c      param(3):    r_out, Outer launch radius, Rg
+c      param(4):    d_foci, Distance to wind foci, Rg
+c      param(5):    fcov, Covering fraction of wind 
+c      param(6):    vinf, outflow velocity at infinty, c
+c      param(7):    rv, Wind velocity scale-length, Rg
+c      param(8):    vexp, Wind velocity exponent
+c      param(9):   kappa, Radial density law exponent
+c      param(10):   inc, Observer inclination, deg
+c      param(11):   E0, Rest frame line energy, keV
 
 c      Defining internal energy grid
-c      Linearly spaced in Eobs_Eem, to give 3eV at 6keV
-c      Implies delta Eobs_Eem = 5e-4
+c      Linearly spaced in Eobs_Eem, to give 1.2eV at 6keV
+c      Implies delta Eobs_Eem = 2e-4
 c      Range of 0.2 -> 4.4 gives max bulk velocity 0.9c
        e_enew(0) = 0.2
-       Enew(0) = e_enew(0) * param(12)
+       Enew(0) = e_enew(0) * param(11)
        do n=1, Nnew, 1
-          e_enew(n) = e_enew(0) + 5e-4*float(n)
-          Enew(n) = e_enew(n) * param(12)
+c          e_enew(n) = e_enew(0) + 5e-4*float(n)
+          e_enew(n) = e_enew(0) + 2.0e-4*float(n)
+          Enew(n) = e_enew(n) * param(11)
        end do
 
 c      Filling parameter array for line-calculation
        do i=1, npars-1, 1
           cparam(i) = param(i)
        end do
-       cparam(12) = 1.0 !Afe
-       cparam(13) = param(12) !E0
-       cparam(14) = 1.0 !incident spec norm
-       cparam(15) = 2.0 !incident spec gamma
+       cparam(11) = 1.0 !Afe
+       cparam(12) = param(11) !E0
+       cparam(13) = 1.0 !incident spec norm
+       cparam(14) = 2.0 !incident spec gamma
        
 c      calculating line
        call calc_windline(e_enew,Nnew,cparam,ifl,ph)
 
+
 c      re-binning to xspec grid
        call inibin(Nnew, Enew, ne, ear, istart, iend, fstart, fend, 0)
        call erebin(Nnew, ph, ne, istart, iend, fstart, fend, photar)
+
 
 c      re-normalising
        call re_norm(ear,ne,photar)
@@ -92,6 +94,7 @@ c      re-normalising
        
        
        subroutine windlinefk(ear,ne,param,ifl,photar,photer)
+       use xsfortran
        implicit none
 
        integer npars, cpars
@@ -103,7 +106,8 @@ c      re-normalising
        real oldpars(npars)
 
        integer Nnew
-       parameter(Nnew=8400)
+c       parameter(Nnew=8400)
+       parameter(Nnew=21000)
        real e_enew(0:Nnew), ph(Nnew), Enew(0:Nnew) !e_enew defined as Eobs_Eem
 
        real fstart(ne), fend(ne)
@@ -138,7 +142,8 @@ c      Range of 0.2 -> 4.4 gives max bulk velocity 0.9c
        e_enew(0) = 0.2
        Enew(0) = e_enew(0) * 6.4
        do n=1, Nnew, 1
-          e_enew(n) = e_enew(0) + 5e-4*float(n)
+c          e_enew(n) = e_enew(0) + 5e-4*float(n)
+          e_enew(n) = e_enew(0) + 2e-4*float(n)
           Enew(n) = e_enew(n) * 6.4
        end do
 
@@ -153,6 +158,7 @@ c      Filling param array
 c      calling model
        call calc_windline(e_enew, Nnew, cparam, ifl, ph)
 
+       
 c      Re-binning to xspec grid
        call inibin(Nnew, Enew, ne, ear, istart, iend, fstart, fend, 0)
        call erebin(Nnew, ph, ne, istart, iend, fstart, fend, photar)
@@ -167,6 +173,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 
        subroutine calc_windline(ees, nn, param, ifl, ph)
+       use xsfortran
        implicit none
 
        integer nn, ifl
@@ -228,22 +235,22 @@ c      Setting wind resolution
        dphi = 0.001
 
 c      Reading parameters
-       Mbh = dble(param(1))
-       mdot_w = dble(param(2))
-       r_in = dble(param(3))
-       r_out = dble(param(4))
-       d_foci = dble(param(5))
-       fcov = dble(param(6))
-       vinf = dble(param(7))
-       rv = dble(param(8))
-       vexp = dble(param(9))
-       kappa = -1.0*dble(param(10))
-       inc = (pi * dble(param(11)))/180.0
-       Afe = 4.68d-5 * dble(param(12)) !uses abund from Anderson & Grevesse 1989
-       E0 = dble(param(13))
-       N0 = dble(param(14))
-       Gamma = dble(param(15))
-
+       Mbh = 1.0d8 !dummy variable - factor out properly later
+       mdot_w = dble(param(1))
+       r_in = dble(param(2))
+       r_out = dble(param(3))
+       d_foci = dble(param(4))
+       fcov = dble(param(5))
+       vinf = dble(param(6))
+       rv = dble(param(7))
+       vexp = dble(param(8))
+       kappa = -1.0*dble(param(9))
+       inc = (pi * dble(param(10)))/180.0
+       Afe = 4.68d-5 * dble(param(11)) !uses abund from Anderson & Grevesse 1989
+       E0 = dble(param(12))
+       N0 = dble(param(13))
+       Gamma = dble(param(14))
+       
 
 c      Defining system pars
        Rg = (G*Mbh)/c**2
@@ -332,9 +339,9 @@ c      -----------------------------------------------------------------
 
                 !Placing in bin
                 !Since grid exactly known, bin idx is analytic
-                ebin_idx = ceiling((eshift - 0.2)/(5.0d-4))
+c                ebin_idx = ceiling((eshift - 0.2)/(5.0d-4))
+                ebin_idx = ceiling((eshift-0.2)/(2.0d-4))
                 ph(ebin_idx) = ph(ebin_idx) + NfeK_obs !ph/s/cm^2/bin
-
                 phi_grd = phi_grd + dphi
              end do
              r_grd = r_grd + dr_lin
