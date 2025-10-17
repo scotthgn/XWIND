@@ -1,182 +1,50 @@
-c      Model for calculating the line-emission from a outflowing wind.     
-c      Assumes a bi-conical structure, launched between r_in and r_out
-c      reacing some velcotiy v_inf at infinity. The azmiuthal velocity
-c      is assumed Keplerian at the base, and calculated by conserving
-c      angular momentum along a trajectory
+c      Contains core routines for calculating xwind line profile.
+c      These routines form the calcualtions for all higher level xwind
+c      models.
 c
-c      To calculate the line profile, the code will first calculate the
-c      density within a cell in a wind, which is used to estimate the
-c      fluorescent emission (i.e by integrating the input spectrum 
-c      through the cell). It then calculates the expected energy shift
-c      in the cell, applies relativstic boosting effects, and then 
-c      adds photon flux to relevant energy bin
-c     
-c      For an input spectru, a simple power-law, calculated between
-c      7 and 40 keV, is used.
+c      XWIND - Description
+c      -----------------------------------------------------------------
+c      A model for calculating the line-emission from a outflowing wind.
+c      Assumes a bi-conical structure, launched between radii r_in and
+c      r_out (measured in Rg), and reaching som velocity v_inf at infinity.
+c      The azimuthal velocity is assumed Keplerian at the base of the wind,
+c      and then calculated by conserving angular momentum along a trajectory.
 c
-c      Note: internal resolution set to give 3eV at 6keV
-c      (oversample XRISM resolution)
-
-
-       subroutine windline(ear,ne,param,ifl,photar,photer)
-       use xsfortran
-c      Returns line profile centered on input energy E0
-c      Re-normalised to unity
-       implicit none
-
-       integer npars, cpars
-       parameter(npars=11)
-       parameter(cpars=14)
-       
-       integer ne, ifl
-       real ear(0:ne), photar(ne),param(npars),photer(ne),cparam(cpars)
-       real oldpars(npars)
-
-       integer Nnew
-       parameter(Nnew=21000)
-       real e_enew(0:Nnew), ph(Nnew), Enew(0:Nnew) !e_enew defined as Eobs_Eem
-
-       real fstart(ne), fend(ne)
-       real istart(ne), iend(ne)
-       
-       logical parchange, echange
-       save oldpars
-
-       integer i, n
-
-c      param(1):    mdot_w, wind mass outflow rate, Mdot/Mdot_edd 
-c      param(2):    r_in, Inner launch radius, Rg
-c      param(3):    r_out, Outer launch radius, Rg
-c      param(4):    d_foci, Distance to wind foci, Rg
-c      param(5):    fcov, Covering fraction of wind 
-c      param(6):    vinf, outflow velocity at infinty, c
-c      param(7):    rv, Wind velocity scale-length, Rg
-c      param(8):    vexp, Wind velocity exponent
-c      param(9):   kappa, Radial density law exponent
-c      param(10):   inc, Observer inclination, deg
-c      param(11):   E0, Rest frame line energy, keV
-
-c      Defining internal energy grid
-c      Linearly spaced in Eobs_Eem, to give 1.2eV at 6keV
-c      Implies delta Eobs_Eem = 2e-4
-c      Range of 0.2 -> 4.4 gives max bulk velocity 0.9c
-       e_enew(0) = 0.2
-       Enew(0) = e_enew(0) * param(11)
-       do n=1, Nnew, 1
-c          e_enew(n) = e_enew(0) + 5e-4*float(n)
-          e_enew(n) = e_enew(0) + 2.0e-4*float(n)
-          Enew(n) = e_enew(n) * param(11)
-       end do
-
-c      Filling parameter array for line-calculation
-       do i=1, npars-1, 1
-          cparam(i) = param(i)
-       end do
-       cparam(11) = 1.0 !Afe
-       cparam(12) = param(11) !E0
-       cparam(13) = 1.0 !incident spec norm
-       cparam(14) = 2.0 !incident spec gamma
-       
-c      calculating line
-       call calc_windline(e_enew,Nnew,cparam,ifl,ph)
-
-
-c      re-binning to xspec grid
-       call inibin(Nnew, Enew, ne, ear, istart, iend, fstart, fend, 0)
-       call erebin(Nnew, ph, ne, istart, iend, fstart, fend, photar)
-
-
-c      re-normalising
-       call re_norm(ear,ne,photar)
-
-       return
-       end
-       
-       
-       subroutine windlinefk(ear,ne,param,ifl,photar,photer)
-       use xsfortran
-       implicit none
-
-       integer npars, cpars
-       parameter(npars=14)
-       parameter(cpars=15)
-
-       integer ne, ifl
-       real ear(0:ne),photar(ne),param(npars),photer(ne),cparam(cpars)
-       real oldpars(npars)
-
-       integer Nnew
-c       parameter(Nnew=8400)
-       parameter(Nnew=21000)
-       real e_enew(0:Nnew), ph(Nnew), Enew(0:Nnew) !e_enew defined as Eobs_Eem
-
-       real fstart(ne), fend(ne)
-       real istart(ne), iend(ne)
-       
-       logical parchange, echange
-       save oldpars
-
-       integer i, n
-
-c      param(1):    Mbh, Black hole mass, Msol
-c      param(2):    mdot_w, wind mass outflow rate, Mdot/Mdot_edd 
-c      param(3):    r_in, Inner launch radius, Rg
-c      param(4):    r_out, Outer launch radius, Rg
-c      param(5):    d_foci, Distance to wind foci, Rg
-c      param(6):    fcov, Covering fraction of wind 
-c      param(7):    vinf, outflow velocity at infinty, c
-c      param(8):    rv, Wind velocity scale-length, Rg
-c      param(9):    vexp, Wind velocity exponent
-c      param(10):   kappa, Radial density law exponent
-c      param(11):   inc, Observer inclination, deg
-c      param(12):   Afe, iron abundance, relative to solar
-c      param(13):   N0, incident power-law normalisation at 1 keV
-c                       has units: ph/s/cm^2/keV
-c      param(14):   Gamma, incident power-law photon index
-
-
-c      Defining internal energy grid
-c      Linearly spaced in Eobs_Eem, to give 3eV at 6keV
-c      Implies delta Eobs_Eem = 5e-4
-c      Range of 0.2 -> 4.4 gives max bulk velocity 0.9c
-       e_enew(0) = 0.2
-       Enew(0) = e_enew(0) * 6.4
-       do n=1, Nnew, 1
-c          e_enew(n) = e_enew(0) + 5e-4*float(n)
-          e_enew(n) = e_enew(0) + 2e-4*float(n)
-          Enew(n) = e_enew(n) * 6.4
-       end do
-
-c      Filling param array
-       do i=1, 12, 1
-          cparam(i) = param(i)
-       end do
-       cparam(13) = 6.4 !central energy
-       cparam(14) = param(13)
-       cparam(15) = param(14)
-       
-c      calling model
-       call calc_windline(e_enew, Nnew, cparam, ifl, ph)
-
-       
-c      Re-binning to xspec grid
-       call inibin(Nnew, Enew, ne, ear, istart, iend, fstart, fend, 0)
-       call erebin(Nnew, ph, ne, istart, iend, fstart, fend, photar)
-
-       return
-       end
-
+c      To calculate the line profile, the code first calculates the density
+c      profile of the wind, assuming mass conservation. I.e for a given 
+c      wind mass outflow rate, mdot, and velocity along a streamline the
+c      code will conserve mass to give an density for any point in the wind.
+c      This is then used to calcualte the number of photons absorbed by each
+c      cell in the wind, simply by integrating an input (a powerlaw)
+c      spectrum along a line of sight through the wind. The number of absorbed
+c      photons translates to the number of emitted photons, via the fluorescent
+c      yield, to then give the emissivity profile of the wind.
+c
+c      Finally, the code then calculates the energy-shift between the emitting
+c      frame and the observer frame for each cell in the wind, to build the 
+c      total line profile. This considers special relativity, and the
+c      gravitational redshift from GR, but no other GR effects.
+c
+c      The input spectrum to calculate the fluoresence is a simple power-law
+c      between 7 and 40 keV
+c      -----------------------------------------------------------------
+c
+c      For details, see Hagen, Done & Matzeu (in prep)
+c      
+c      -----------------------------------------------------------------
+c      -----------------------------------------------------------------
+      
 c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c      Main subroutine for calculating wind line profile and emission
 c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 
-       subroutine calc_windline(ees, nn, param, ifl, ph)
+       subroutine calc_windline(ees, nn, param, ph)
        use xsfortran
        implicit none
 
-       integer nn, ifl
+       integer nn
        real ees(0:nn), ph(nn), param(*)
        integer ebin_idx
 
@@ -219,6 +87,43 @@ c      iteration indices
 c      Strings for writing to terminal
        character(30) fc_str
 
+c      inpars
+c      ------
+c      ees : array
+c          Internal energy grid in E/E0
+c      nn : int
+c          Number of energy bins 
+c      param : array
+c          Model parameters
+c      ifl : int
+c          Spectrum number
+c      ph : array
+c          Spectrum (initially empty)
+c
+c      param description
+c      -----------------
+c      param(1):    mdot_w, wind mass-outflow rate, Units: Mdot/Mdot_edd
+c      param(2):    r_in, inner launch radius, Units: Rg 
+c      param(3):    r_out, outer launch radius, Units: Rg
+c      param(4):    d_foci, distance to wind focus, Units: Rg
+c      param(5):    fcov, wind covering fraction, Units: Omega/4pi
+c      param(6):    vinf, outflow velocity at infinity, Units: c
+c      param(7):    rv, wind velocity scale length, Units: Rg
+c      param(8):    vexp, wind velocity exponent (denoted beta in paper)
+c      param(9):    kappa, radial density law exponent
+c      param(10):   inc, observer inclination, Units: deg
+c      param(11):   Afe, iron abundance, Units: [Fe]/[Fe solar]
+c      param(12):   E0, rest frame line energy, Units: keV
+c      param(13):   N0, incident power-law spectrum normalisation, Units: photons/s/cm^2 at 1keV 
+c      param(14):   Gamma, incident power-law spectrum photon index
+c
+c      outpars
+c      -------
+c      ph : array
+c          Line profile with physical normalisation
+c
+c      START ROUTINE
+c      -----------------------------------------------------------------
        
 c      Setting physical constants
        pi = 4.0*atan(1.0)
@@ -355,6 +260,7 @@ c                ebin_idx = ceiling((eshift - 0.2)/(5.0d-4))
        end
 
 
+
 c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c      Helper routines
@@ -395,27 +301,7 @@ c      pars(3): dR
        end
 
 
-       subroutine re_norm(ear,ne,ph)
-c      Re-normalises such that the integrated line-profile is unity
-       implicit none
 
-       integer ne
-       real ear(0:ne), ph(ne)
-       double precision ph_int
-       
-       integer i
-
-       ph_int = 0.0
-       do i=1, ne, 1
-          ph_int = ph_int + ph(i)
-       end do
-       ph = ph*(1.0/ph_int)
-       
-       return
-       end
-
-
-      
 c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c      Model functions
