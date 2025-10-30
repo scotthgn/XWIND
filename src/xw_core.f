@@ -149,7 +149,7 @@ c      Reading parameters
        vinf = dble(param(6))
        rv = dble(param(7))
        vexp = dble(param(8))
-       kappa = -1.0*dble(param(9))
+       kappa = dble(param(9))
        inc = (pi * dble(param(10)))/180.0
        Afe = 4.68d-5 * dble(param(11)) !uses abund from Anderson & Grevesse 1989
        E0 = dble(param(12))
