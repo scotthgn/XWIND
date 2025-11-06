@@ -65,12 +65,12 @@ c      Re-normsalised to unity
 
        integer i, n
 
-c      param(1):    mdot_w, wind mass-outflow rate, Units: Mdot/Mdot_edd
+c      param(1):    log10 mdot_w, wind mass-outflow rate, Units: Mdot/Mdot_edd
 c      param(2):    r_in, inner launch radius, Units: Rg
 c      param(3):    r_out, outer launch radius, Units: Rg
 c      param(4):    d_foci, distance to wind focus (from BH), Units: Rg
 c      param(5):    fcov, wind covering fraction (as seen from BH), Units: Omega/4pi
-c      param(6):    vinf, outflow velocity at infinity, Units: c   
+c      param(6):    log10 vinf, outflow velocity at infinity, Units: c   
 c      param(7):    rv, wind velocity scale length, Units: Rg
 c      param(8):    beta, wind velocity exponent
 c      param(9):    vturb, intrinsic turbulence, Units: km/s
@@ -155,12 +155,12 @@ c      for intrinsic line width and Kalpha1/2 doublet
 
        integer i
 
-c      param(1):    mdot_w, wind mass-outflow rate, Units: Mdot/Mdot_edd
+c      param(1):    log10 mdot_w, wind mass-outflow rate, Units: Mdot/Mdot_edd
 c      param(2):    r_in, inner launch radius, Units: Rg
 c      param(3):    r_out, outer launch radiu, Units: Rg
 c      param(4):    d_foci, distance to wind focus, Units: Rg
 c      param(5):    fcov, wind covering fraction (as seen from BH), Units: Omega/4pi
-c      param(6):    vinf, outflow velocity at infinity, Units: c
+c      param(6):    log10 vinf, outflow velocity at infinity, Units: c
 c      param(7):    rv, wind velcity scale length, Rg
 c      param(8):    beta, wind velocity exponent,
 c      param(9):    vturb, intrinsic turbulence, Units: km/s
@@ -240,12 +240,12 @@ c      Normalised to conserve photon flux of the input specrum
 
        integer i
 
-c      param(1):    mdot_w, wind mass-outflow rate, Units: Mdot/Mdot_edd   
+c      param(1):    log10 mdot_w, wind mass-outflow rate, Units: Mdot/Mdot_edd   
 c      param(2):    r_in, inner launch radius, Units: Rg
 c      param(3):    r_out, outer launch radius, Units: Rg
 c      param(4):    d_foci, distance to wind focus, Units: Rg
 c      param(5):    fcov, wind covering fraction, Units: Omega/4pi
-c      param(6):    vinf, outflow velocity at infinity, Units: c
+c      param(6):    log10 vinf, outflow velocity at infinity, Units: c
 c      param(7):    rv, wind velocity scale length, Units: Rg
 c      param(8):    beta, wind velocity exponent
 c      param(9):    vturb, wind trubulence, Units: km/s

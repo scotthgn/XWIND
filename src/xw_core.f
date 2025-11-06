@@ -102,12 +102,12 @@ c          Spectrum (initially empty)
 c
 c      param description
 c      -----------------
-c      param(1):    mdot_w, wind mass-outflow rate, Units: Mdot/Mdot_edd
+c      param(1):    log10 mdot_w, wind mass-outflow rate, Units: Mdot/Mdot_edd
 c      param(2):    r_in, inner launch radius, Units: Rg 
 c      param(3):    r_out, outer launch radius, Units: Rg
 c      param(4):    d_foci, distance to wind focus, Units: Rg
 c      param(5):    fcov, wind covering fraction, Units: Omega/4pi
-c      param(6):    vinf, outflow velocity at infinity, Units: c
+c      param(6):    log10 vinf, outflow velocity at infinity, Units: c
 c      param(7):    rv, wind velocity scale length, Units: Rg
 c      param(8):    vexp, wind velocity exponent (denoted beta in paper)
 c      param(9):    kappa, radial density law exponent
@@ -141,12 +141,12 @@ c      Setting wind resolution
 
 c      Reading parameters
        Mbh = 1.0d8 !dummy variable - factor out properly later
-       mdot_w = dble(param(1))
+       mdot_w = dble(10.0**(param(1)))
        r_in = dble(param(2))
        r_out = dble(param(3))
        d_foci = dble(param(4))
        fcov = dble(param(5))
-       vinf = dble(param(6))
+       vinf = dble(10.0**(param(6)))
        rv = dble(param(7))
        vexp = dble(param(8))
        kappa = dble(param(9))
