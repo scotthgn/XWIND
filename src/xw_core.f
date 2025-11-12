@@ -210,6 +210,7 @@ c      -----------------------------------------------------------------
              dr_lin = 10**(log10(r_grd)+dlog_r) - r_grd
              rmid = r_grd + 0.5*dr_lin !evaluate at centre of bin
 
+
              !streamline pars
              cosB = cos_beta(cos_th_grd, rmid, d_foci)
              r_base = d_foci * tan(acos(cosB))
@@ -244,7 +245,6 @@ c      -----------------------------------------------------------------
 
                 !Placing in bin
                 !Since grid exactly known, bin idx is analytic
-c                ebin_idx = ceiling((eshift - 0.2)/(5.0d-4))
                 ebin_idx = ceiling((eshift-0.2)/(2.0d-4))
                 ph(ebin_idx) = ph(ebin_idx) + NfeK_obs !ph/s/cm^2/bin
                 phi_grd = phi_grd + dphi
@@ -323,9 +323,9 @@ c      s.t photons traevl in straight (ish) lines
 
        eshift_inv = sin(inc) * (vr*cos(phi) - vphi*sin(phi))
        eshift_inv = eshift_inv + vz*cos(phi)
-       eshift_inv = eshift_inv*(-1.0) + (1.0-(1.0/(4.0*r**2.0)))**(2.0)
-       eshift_inv = eshift_inv*gamma*(1.0+(1.0/(2.0*r)))**(4.0)
-
+       eshift_inv = eshift_inv*(-1.0) + 1.0
+       eshift_inv = eshift_inv*gamma*(1.0 - (2.0/r))**(-0.5)
+       
        energy_shift = 1/eshift_inv
        return
        end
