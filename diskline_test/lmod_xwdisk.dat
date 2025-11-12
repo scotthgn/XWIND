@@ -1,0 +1,5 @@
+xwdisk  4      0.0      1e20    xwdisk     add     0       0
+r_in    ""     10       6       6          1e3     1e3     0.01 
+r_out   ""     100      10      10         1e4     1e4     0.01
+inc     deg    45       10      10         80      80      -1
+E0      keV    6.4      1       1          10      10      -1
