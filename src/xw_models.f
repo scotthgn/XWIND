@@ -40,7 +40,6 @@ c      -----------------------------------------------------------------
       
 
        subroutine xwindline(ear,ne,param,ifl,photar,photer)
-       use xsfortran
 c      Gives line profile centred on some energy 0
 c      Re-normsalised to unity
        implicit none
@@ -128,7 +127,6 @@ c      re-binning and re-normalising
 
 
        subroutine xwindfe(ear,ne,param,ifl,photar,photer)
-       use xsfortran
 c      Caclulates windline profile specifically for Fe-Kalpha.
 c      Uses the physical normalisation based on wind profile + incident spectrum.
 c      Also uses Holzer et al. (1997) intrinsic line profile to account
@@ -223,7 +221,6 @@ c      re-binning back to xspec energy grid
 
 
        subroutine xwindconv(ear,ne,param,ifl,photar,photer)
-       use xsfortran
 c      Convolves an input spectrum (ph) with the xwindline profile
 c      Normalised to conserve photon flux of the input specrum
        implicit none
