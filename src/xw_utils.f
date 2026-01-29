@@ -38,7 +38,7 @@ c         Generates the 7 Lorentzian Holzer profile for the intrinsic
 c         Fe-Kalpha line
 c      -----------------------------------------------------------------
 c
-c      For details on XWIND, see: Hagen, Done & Matzeu (in prep)
+c      For details on XWIND, see: Hagen et al. (2026, submitted)
 c
 c      -----------------------------------------------------------------
 c      -----------------------------------------------------------------

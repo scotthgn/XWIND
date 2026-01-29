@@ -33,7 +33,7 @@ c          Model preserves photon count (i.e convolution kernel is
 c          normalised to units)
 c      -----------------------------------------------------------------
 c
-c      If you use XWIND please cite: Hagen, Done & Matzeu (in prep)
+c      If you use XWIND please cite: Hagen et al. (2026, submitted to A&A)
 c
 c      -----------------------------------------------------------------
 c      -----------------------------------------------------------------

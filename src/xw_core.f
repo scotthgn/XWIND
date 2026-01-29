@@ -29,7 +29,7 @@ c      The input spectrum to calculate the fluoresence is a simple power-law
 c      between 7 and 40 keV
 c      -----------------------------------------------------------------
 c
-c      For details, see Hagen, Done & Matzeu (in prep)
+c      For details, see Hagen et al. (2026, submitted)
 c      
 c      -----------------------------------------------------------------
 c      -----------------------------------------------------------------
