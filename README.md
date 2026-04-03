@@ -2,7 +2,7 @@
 
 Analytic model for calculating line-profiles from outflowing winds in AGN. Specifically, this is designed for slow(ish) winds at BLR scales. It is originally designed with the Fe-K $\alpha$ complex in mind, but also allows for the convolution of the same transfer functions for any line species (under the strong assumption that their emissivity traces density in the same way as netral Fe-K $\alpha$). This code is specifically designed for use in XSPEC. For a non-XSPEC version, see [PyXWIND](https://github.com/scotthgn/PyXWIND).
 
-If this model is used in your work, please cite: **Hagen et al. (2026, submitted to A&amp;A)** (https://ui.adsabs.harvard.edu/abs/2026arXiv260122392H/abstract)
+If this model is used in your work, please cite: **Hagen et al. 2026, A&A, 708, A5** (https://ui.adsabs.harvard.edu/abs/2026A%26A...708A...5H/abstract)
 
 **Note 1**: Depending on your version of XSPEC you will need to use one of two available branches:
 1. For XSPEC version $\geq$ v.15.1, use **main** branch
